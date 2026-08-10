@@ -410,13 +410,15 @@ Model consumption is represented independently from contribution and is absent f
 
 Hospital C is allocated substantial representation of selected PathMNIST classes that are intentionally weakly represented in the A+B configuration. Mode 1A therefore produces two independent evaluation dimensions. The governance dimension examines whether contribution is admitted while operations outside the granted capability, including model consumption, remain denied. The analytical dimension compares the matched A+B control with the A+B+C model to determine whether the additional data contribution changes model performance.
 
-\subsubsection{Mode 1B: bounded AI-agent participation}
+ \subsubsection{Mode 1B: bounded AI-agent participation}
 
-Mode 1B introduces an AI agent as a computational participant rather than as an additional data-holding member of the federation. The agent is assigned a dedicated identity and a narrowly bounded inference capability associated with the governed federation context. It does not participate in training and does not inherit the capabilities of a sponsoring organisation. The relevant resource is the model produced by the governed federation, while the permitted operation is restricted to the inference activity expressed by the issued capability.
+Mode 1B introduces an AI agent as a computational participant acting within the same governed federation context as the human participants. The agent has a dedicated identity and holder-bound capabilities that permit narrowly scoped inference operations but do not confer federation membership or unrestricted access to model outputs. Its execution environment is isolated from privileged governance services so that technical reachability cannot enlarge the participation relation established through admission.
 
-The execution environment is separated from the governance services so that runtime reachability cannot silently enlarge the admitted participation relation. The agent operates within an isolated execution segment that exposes the permitted inference path while withholding direct access to privileged governance components, credential-signing functions, and decision-evidence keys. The isolation mechanism is therefore not treated as a substitute for admission; rather, it constrains the operational environment so that the capabilities available after admission remain consistent with the governance decision made at the federation boundary.
+The scenario examines a request from Audrey for cancer-related information that she is not authorised to consume in its original form. Rather than treating the resulting denial as the end of the interaction, the agent may invoke an explicitly governed rebind operation. Rebind transforms the restricted result into a policy-authorised derivative representation, implemented in the demonstrator as a blurred image accompanied by a qualitative indication of model accuracy. The transformation is determined by federation policy rather than by the agent itself and does not transfer the agent's own authority to the requesting user.
 
-Mode 1B is evaluated as a conformance experiment rather than as a demonstration that an AI agent is intrinsically safe or predictable. The relevant systems question is whether actions outside the admitted authority, purpose, and capability can acquire effects beyond the governed boundary. Agent-specific runtime controls and the federation admission mechanism consequently address different layers of the same execution path.
+The agent may therefore transform a restricted result into a policy-authorised derivative, while the recipient's rights to that derivative are evaluated independently from rights to the source. Audrey may be authorised to consume the rebound representation while remaining unauthorised to consume the corresponding unrestricted cancer-related output. The transformation and subsequent consumption remain separate governed operations within the same federation context, preserving the distinction between the capabilities of the computational participant and those of the requesting user.
+
+Mode 1B is consequently evaluated as a conformance experiment rather than as a claim that an AI agent is intrinsically safe or predictable. The relevant property is whether execution preserves the capability relations established by federation governance, including the requirement that an agent may exercise its own authorised operations without becoming a source of authority for another participant. Runtime isolation and admission therefore operate at complementary layers, with the former constraining technical execution and the latter determining which relations are legitimate within the federation.
 
 \subsection{AI-Agent Participation and Governance Invariants}
 
@@ -481,6 +483,11 @@ A contribution capability, where present, remains independent from model-query o
 Execution cannot redefine governance
 &
 Tools, network paths, or runtime functions that are technically available cannot enlarge the participation relation established by the admission decision.
+\\
+\addlinespace
+Derivative consumption is distinct from source consumption
+&
+A policy-authorised rebind may create a derivative that can be consumed under a capability relation different from that governing the source representation.
 \\
 
 \bottomrule
