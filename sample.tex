@@ -93,91 +93,40 @@ The paper makes three contributions. It first reframes the transition from pilot
 The remainder of the paper reviews existing collaborative health-data approaches and the governance boundaries they address, introduces the Federated Computing principles used by OpenHealth, and describes the implementation and experimental design. Subsequent sections report the evaluation results and discuss their implications, limitations, and directions for further development.
 
 % =============== Section 2 =================
-\section{Existing Solutions and Related Work }
+\section{Existing Solutions and Related Work}
 
-\subsection{Collaborative health-data infrastructures }
+\subsection{Collaborative health-data infrastructures}
 
-Health-data collaboration is supported by several classes of infrastructure that address different parts of the problem. These include centralised data platforms, Trusted Research Environments (TREs), proprietary federated platforms, open-source federated learning frameworks, and policy or data-sovereignty frameworks. They should not be considered direct substitutes. Each establishes a different boundary around data custody, computation, participation, and governance. 
+Health-data collaboration is supported by several classes of infrastructure, including centralised data platforms, Trusted Research Environments (TREs), proprietary federated platforms, open-source federated learning frameworks, and policy or data-sovereignty frameworks. They are not direct substitutes because each establishes a different boundary around data custody, computation, participation, and governance.
 
-Centralised data platforms simplify integration by bringing data under a common technical and administrative environment. Users and datasets can then be governed through repository-level identity, access-control, and data-management mechanisms. This model is effective where central custody is organisationally and legally acceptable, but it is less suitable when participating organisations must retain direct sovereignty over sensitive health data. The original OpenHealth analysis identified this dependence on central custody as the principal limitation for cross-organisational use cases in which data cannot simply be transferred into a common repository.  
+Centralised data platforms simplify integration by bringing data under a common technical and administrative environment, where repository-level identity, access-control, and data-management mechanisms can govern users and datasets. Such an arrangement is effective when common custody is organisationally and legally acceptable but is less suitable when participating organisations must retain direct sovereignty over sensitive health data. TREs adopt a different boundary by providing controlled environments in which approved researchers or projects analyse specified datasets under explicit governance and disclosure controls. OpenSAFELY is a prominent example. TREs therefore provide strong mechanisms for research approval, controlled access, and accountability while principally governing access to approved data and projects rather than the continuing evolution of a federation of autonomous organisations and operational relationships.
 
-Trusted Research Environments provide a different model. Rather than broadly centralising operational health-data services, they create controlled environments in which approved researchers or projects can analyse specified datasets under explicit governance and disclosure controls. OpenSAFELY is a prominent example of this approach. TREs provide strong mechanisms for research approval, controlled access, and accountability, but their principal governance object is generally access to existing datasets for approved research rather than the continuing evolution of a federation of autonomous organisations, resources, and operational relationships.  
+Proprietary integration and federated platforms, including Rhino Health, Syntropy, and the Mayo Clinic Platform, support cross-site analytics while allowing participating organisations to retain local data. Their governance, deployment, and operational mechanisms are defined within the corresponding platform environment. Open-source federated learning frameworks such as Flower, NVIDIA FLARE, Intel OpenFL, PySyft, and Substra similarly provide computational mechanisms for coordinating distributed machine-learning workflows while keeping raw data local. In both cases, federated computation can be technically coordinated while authority to participate remains represented through platform governance, deployment configuration, or surrounding organisational processes.
 
-Proprietary integration and federated platforms support cross-site analytics while allowing participating organisations to retain local data. Examples considered in the initial OpenHealth analysis include Rhino Health, Syntropy, and the Mayo Clinic Platform. Such platforms can provide substantial integration, governance, deployment, and operational functionality. Their participation model, however, is normally defined within the governance and technical environment of the platform itself. The relevant distinction for OpenHealth is therefore not whether these platforms provide governance — they do — but whether the rules by which participation changes are portable independently of the platform implementing the computation. 
+Cross-organisational collaboration also depends on semantic interoperability because participating institutions may represent clinically equivalent concepts through different data structures, terminologies, coding systems, or information models. Shared vocabularies and ontologies can make distributed data interpretable across organisational boundaries, but semantic correspondence does not determine whether a participant is entitled to contribute a resource, consume a resulting model, or perform an operation under a particular authority. Semantic interoperability and federation governance are therefore complementary requirements rather than alternative solutions to the same problem.
 
-Open-source federated learning frameworks, including Flower, NVIDIA FLARE, Intel OpenFL, PySyft, and Substra, provide the computational mechanisms required to execute distributed machine-learning workflows. They solve an important health-data problem by allowing model training across sites without requiring raw data to be collected centrally. Their principal abstraction, however, is the distributed computation. Decisions about which organisations may participate, under whose authority, and under which cross-organisational governance conditions are commonly established through deployment configuration and surrounding organisational processes. 
+Policy-oriented data-space initiatives, including Gaia-X, the European Health Data Space (EHDS), and TEHDAS, address trustworthy exchange, organisational eligibility, interoperability, and data sovereignty at ecosystem level. Their emphasis on organisational control is closely aligned with cross-organisational health-data collaboration, although eligibility for an ecosystem does not by itself establish entitlement to every activity performed within it. Conversely, an operational federation-level admission decision cannot replace the regulatory, contractual, ethical, or organisational conditions that established eligibility.
 
-Finally, policy and data-sovereignty frameworks, including Gaia-X, the European Health Data Space (EHDS), and TEHDAS, address requirements for trustworthy data sharing, organisational eligibility, interoperability, and data sovereignty. These frameworks provide important institutional and regulatory conditions under which data collaboration can occur. They operate at a different level from the runtime mechanisms that determine whether a particular participant may undertake a particular federated activity. 
+AI-agent frameworks introduce a further implementation layer by coordinating how computational participants invoke tools, services, workflows, memory, or other runtime resources. Tool restrictions, isolation, approval mechanisms, and monitoring can constrain execution, but such controls do not determine whether an AI-driven process is entitled to participate in a federated health-data activity, under whose authority it acts, or which federation capabilities it may exercise. OpenHealth therefore treats the agent framework as an execution mechanism whose implementation may change without redefining the governance semantics of the federation.
 
-These approaches therefore address complementary parts of the same health-data collaboration problem. The OpenHealth question is not which one should be replaced, but how their respective functions can coexist when a collaboration must evolve. 
+\subsection{Governance boundaries in cross-organisational collaboration}
 
-\subsection{Identity and operational access control }
+Cross-organisational infrastructures depend on established identity and access-control mechanisms. Federated identity systems can authenticate principals across organisational boundaries, while OAuth-based mechanisms, cloud IAM, RBAC, and ABAC can control access to services and resources. Such technologies provide necessary deployment foundations by establishing whether an identity can be trusted, whether a service account may invoke an API, or whether an actor possessing specified attributes may access a resource. Participation in a shared activity raises a different question because the relevant decision must be established across organisational boundaries.
 
-Cross-organisational infrastructures also depend on established identity and access-control mechanisms. Federated identity systems can authenticate principals across organisational boundaries, while OAuth-based mechanisms, cloud IAM, RBAC, and ABAC can control access to services and resources. 
+In operational deployments, the effective participation decision may be distributed across cloud IAM policies, platform configuration, central policy services, contractual arrangements, and checks embedded in orchestration code. Heterogeneous identity and infrastructure stacks can make integration increasingly bespoke as collaborations evolve, while configuration changes can alter effective participation semantics and complicate reconstruction of earlier decisions. Organisation-local access control and cross-organisational admission consequently address different governance boundaries. The former controls activity within an administrative domain, whereas the latter establishes whether a participant may enter a specified collaborative activity under the applicable federation conditions.
 
-These technologies are necessary deployment foundations. They answer questions such as whether an identity can be trusted, whether a service account may invoke an API, or whether a user possessing particular attributes may access a resource. 
+Cross-silo federated learning illustrates the separation between computational coordination and participation governance. An FL framework can coordinate model distribution, local training, update submission, aggregation, and evaluation while leaving the authority for participation external to the learning procedure. Prior work on auditable session admission has shown that requests can be evaluated against session-specific capabilities and holder identity before reaching the FL runtime, producing explicit ALLOW or DENY decisions and structured decision evidence without modifying the underlying training and aggregation procedure [Fenoglio \& Treleaven, 2026]. OpenHealth adopts the separation between governance boundary and analytical runtime while applying it to the broader problem of federation evolution.
 
-The difficulty arises when such mechanisms also become the implicit representation of the collaboration itself. 
-
-In practical deployments, session participation can become distributed across cloud IAM policies, platform configuration, central policy services, and checks embedded in orchestration code. This makes cross-organisational integration increasingly bespoke because participating organisations have heterogeneous identity and deployment stacks. It also makes past decisions difficult to reconstruct and allows operational configuration changes to modify effective admission behaviour over time.  
-
-The distinction is therefore between organisation-local access control and the cross-organisational decision that establishes participation in a shared activity. 
-
-Session admission determines whether a participant may enter the collaborative session, whereas organisation-local IAM continues to determine what actors may do within their respective organisational environments after entry.  
-
-OpenHealth adopts the same separation but applies it to a broader health-data federation rather than only to the interface of a federated learning session. 
-
-\subsection{Federated learning and session admission }
-
-Federated learning is particularly relevant to OpenHealth because it demonstrates both the value and the limitations of computational federation. 
-
-In cross-silo FL, multiple organisations train a shared model while retaining raw data locally. The FL framework coordinates operations such as model distribution, local training, update submission, aggregation, and evaluation. The computational procedure can therefore be federated even when organisational governance remains external to it. Each request is associated with a specific collaborative session, permitted operation, and holder identity, and produces an explicit ALLOW or DENY decision together with structured evidence. The underlying Flower training and aggregation procedure remains unchanged.  
-
-This is an important precedent for OpenHealth for two reasons: (i) first, it demonstrates that governance of participation can be separated from the analytical framework executing the work; (ii) second, it demonstrates that such governance need not remain an administrative declaration. It can become an executable boundary whose behaviour is tested through both successful and denied requests. 
-
-OpenHealth extends this idea beyond the original FLICS setting. The concern is no longer only which operation a predefined participant may invoke within an FL session. The broader question is how the federation itself can accommodate new forms of participation while preserving its governing conditions. 
-
-\subsection{Data interoperability and semantic models }
-
-Cross-organisational health-data collaboration also requires semantic interoperability. Different institutions may use different data structures, terminologies, coding systems, and representations of clinically equivalent concepts. Shared vocabularies, information models, and ontologies can therefore play an important role in making distributed data interpretable across organisational boundaries. 
-
-This problem is complementary to federation governance. A semantic ontology can specify that concepts represented differently by two hospitals refer to the same clinical entity or relationship. It does not determine whether one hospital is entitled to contribute those data to a particular collaborative activity, whether another participant may use the resulting model, or under whose authority either operation occurs. 
-
-OpenHealth therefore distinguishes semantic interoperability of resources from governance of participation. Both may be necessary in a production health-data service, but they solve different problems. The federated governance layer does not require participating organisations to surrender their internal data models, nor does an agreed semantic model itself establish federation rights. 
-
-\subsection{ Data spaces and organisational sovereignty }
-
-Policy-oriented data-space initiatives provide another important part of the surrounding landscape. Their emphasis on sovereignty, trustworthy exchange, conformity, and organisational eligibility is closely aligned with the requirement that health organisations retain control over their resources while collaborating. 
-
-Data-space frameworks can establish the conditions under which an organisation or service is eligible to participate in a wider ecosystem. OpenHealth addresses the narrower operational transition from such eligibility or organisational agreement to participation in a particular governed activity. 
-
-Eligibility therefore does not automatically imply admission to every activity. Conversely, a federation-level admission decision does not replace the regulatory, contractual, ethical, or organisational requirements that established eligibility in the first place. 
-
-This layered interpretation avoids treating technical admission as a substitute for institutional governance. OpenHealth instead provides a means by which agreed governance conditions can become executable at the federation boundary. 
-
-\subsection{AI-agent frameworks and runtime orchestration }
-
-Emerging agent frameworks add a further form of computational participation. Their principal concern is how an AI-driven process performs tasks through tools, services, workflows, memory, or other computational resources. Such frameworks can provide their own runtime controls, including tool restrictions, isolation, approval mechanisms, and monitoring. 
-
-From the perspective of OpenHealth, these are operational mechanisms. The federation-level question remains whether the computational participant is entitled to invoke a particular federated capability, under which organisational authority, for which purpose, and within which governed context. 
-
-This distinction prevents the federation architecture from becoming dependent on a particular agent implementation. An agent framework can change without changing the governance semantics of the federation, just as the Flower runtime can be replaced without changing the principle of session-bound admission. 
-
-Section 4 applies this distinction explicitly to AI-agent participation and considers how admission and runtime conformance complement agent-specific containment and execution mechanisms. 
-
-\subsection{Comparative view }
-
-Table 1 summarises the different functions provided by the principal approaches discussed above. The comparison is deliberately functional rather than competitive. A checkmark does not imply that a function is implemented identically across products or deployments, and the table is not intended as a feature ranking 
-
+Table~\ref{tab:existing-solutions} summarises the principal approaches according to the boundary at which governance is exercised and the extent to which participation changes become explicit operational decisions. The comparison is functional rather than competitive because the approaches address complementary requirements and may coexist within the same health-data infrastructure.
 
 \begin{landscape}
 
 \begin{table}[htbp]
 \centering
-\scriptsize	
-\caption{Functional comparison of approaches supporting cross-organizational health-data collaboration.}
+\scriptsize
+\caption{Functional comparison of approaches supporting cross-organisational health-data collaboration.}
 \label{tab:existing-solutions}
- 
+
 \begin{tabularx}{\linewidth}{
     >{\raggedright\arraybackslash}p{2.8cm}
     >{\raggedright\arraybackslash}p{2.4cm}
@@ -190,14 +139,14 @@ Table 1 summarises the different functions provided by the principal approaches 
 \toprule
 \textbf{Approach} &
 \textbf{Primary governance boundary} &
-\textbf{Data remain under organizational control} &
+\textbf{Data remain under organisational control} &
 \textbf{Controls operational access} &
 \textbf{Establishes purpose-specific participation} &
 \textbf{Participation decision externally auditable} &
 \textbf{Supports governed change of participation} \\
 \midrule
 
-Centralized data platforms: enterprise cloud data lakes (Runyon, 2022)
+Centralised data platforms: enterprise cloud data lakes (Runyon, 2022)
 &
 Repository / data controller
 &
@@ -306,29 +255,13 @@ Complementary local / runtime mechanisms
 
 \end{landscape}
 
-The principal difference shown by Table 1 is therefore not that existing approaches lack governance. Rather, governance is located at different boundaries. 
+Table~\ref{tab:existing-solutions} does not imply that existing approaches lack governance. Rather, governance is exercised at different boundaries. Centralised platforms primarily govern repositories, TREs govern approved research access, federated learning frameworks coordinate distributed computation while commonly relying on surrounding mechanisms for organisational participation, data-space frameworks establish ecosystem-level conditions, and organisation-local IAM governs identities, services, and resources within each administrative domain. OpenHealth introduces a complementary boundary at the transition from institutional eligibility or agreement to participation in a particular governed federated activity.
 
-Centralised platforms govern the repository. TREs govern approved research access. Federated learning frameworks govern distributed computation but commonly rely on surrounding systems for organisational participation. Data-space frameworks govern ecosystem-level conditions. Organisation-local IAM governs identities, services, and resources within a participant's administrative domain. 
+A health organisation may therefore be authenticated, satisfy regulatory or data-space eligibility requirements, operate infrastructure interoperable with an FL platform, and grant its users valid local permissions without those conditions alone determining whether the organisation, user, or computational process may perform a particular federation activity for a specified purpose and bounded capability. OpenHealth addresses that transition by making the participation decision explicit, session-bound, and auditable while leaving data custody, local identity, operational authorisation, semantic interoperability, and analytical execution with the mechanisms suited to those functions.
 
-OpenHealth introduces an additional boundary at the point where a proposed participant enters a particular governed federated activity. 
+\subsection{Dimensions of collaboration growth}
 
-This boundary is intended to compose with the mechanisms above rather than displace them. 
-
-\subsection{Gap addressed by OpenHealth }
-
-The related work suggests a narrower gap than the original claim that existing infrastructures simply “do not provide admission”. 
-
-The unresolved problem is the transition between institutional agreement and operational participation when the collaboration changes. 
-
-A health organisation may already be authenticated. It may satisfy regulatory or data-space eligibility requirements. Its infrastructure may be technically interoperable with a federated learning platform. Its users may possess valid local permissions. None of these conditions alone determines whether that organisation, user, or computational process should participate in a particular federated activity with a specified purpose and bounded capability. 
-
-OpenHealth addresses this transition by making the participation decision explicit, session-bound, and auditable while leaving data custody, local identity, operational authorization, and analytical execution with the mechanisms best suited to those functions. 
-
-The next section describes how Federated Computing provides the governance model required to make this separation operational. 
-
-\subsection{Dimensions of Collaboration Growth }
-
-Scaling a collaboration requires the ability to change not only the number of participating organisations, but also the resources available to the federation and the operations that participants may perform. These changes are governed differently and should not be conflated. New organisations establish new participation relations, new datasets or models extend the federation’s resource base, and new analytical capabilities extend the set of permitted operations. OpenHealth therefore treats scaling as governed evolution across participants, resources, and operations rather than as the admission of a single class of heterogeneous entities. 
+Scaling a collaboration requires changes not only in the number or type of participants but also in the resources available to the federation and the operations participants may perform. The three dimensions are related but governed through different relations. New participants establish participation relations, new datasets or models extend the federation's resource base, and new analytical capabilities extend the set of permitted operations. Distinguishing them avoids collapsing heterogeneous entities and activities into a single category of objects to be admitted.
 
 \begin{table}[htbp]
 \centering
@@ -376,8 +309,8 @@ Which activities are permitted, for which purpose and scope?
 
 \end{table}
 
+OpenHealth consequently treats scaling as governed evolution across participants, resources, and operations. A change in one dimension does not automatically confer rights in another, providing the conceptual basis for the asymmetric participation relations examined in the experimental implementation.
 
-These dimensions are related but not interchangeable. Scaling therefore requires governed changes in relations among participants, resources, and operations rather than the admission of a single heterogeneous class of entities. 
 % ==================== section 3 ===================
 
 \section{OpenHealth as a Federated Computing Infrastructure }
