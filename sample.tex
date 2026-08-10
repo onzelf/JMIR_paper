@@ -321,6 +321,8 @@ OpenHealth applies Federated Computing to the problem of evolving cross-organisa
 
 A governed federation context is established before operational execution. The context identifies the authorities participating in the collaboration, the applicable constitutional and policy state, the purpose of the activity, and the conditions under which participation may occur. OpenHealth represents the bounded context through a federation envelope, allowing later capability and admission decisions to be interpreted relative to the governance state under which they were made. Authentication alone therefore does not establish federation participation, nor does prior organisational eligibility imply entitlement to every subsequent activity.
 
+A federated service is an operational function exposed within a governed federation while remaining under the control of the organisation that provides it. The federation does not absorb the service or its underlying resources; it governs the relations under which participants may invoke it, including authority, purpose, capability, scope, and federation context. Federated learning, model inference, data transformation, and other analytical functions may therefore be exposed as federated services without becoming part of the constitutive governance of the federation.
+
 The architecture separates governance establishment, capability expression, and operational execution. Governance establishment defines the conditions under which the collaborative context exists. Capability expression describes the bounded activities that a participant may request within that context. Operational execution performs the corresponding computation after admission. Keeping the three concerns distinct allows the participation structure to change without requiring the analytical runtime or organisation-local security mechanisms to become the representation of federation governance. It also prevents an operational configuration change from silently redefining the constitutive conditions of participation.
 
 Federated Computing consequently provides a structure in which collaboration can evolve through changes in relations among participants, resources, and operations. A new organisation need not acquire the rights of an existing member, a newly contributed resource need not become available to every participant, and permission to perform one operation need not imply permission to perform another. The relevant governance question is therefore not whether an entity has been globally admitted to the federation, but whether a particular participation relation is legitimate within the governed context.
@@ -503,7 +505,441 @@ The demonstrator is evaluated along complementary governance and analytical dime
 
 The analytical effect of governed federation expansion is evaluated by comparing an A+B control with the A+B+C configuration under matched training conditions. Overall, macro-level, and class-level model performance provide evidence of the analytical consequence of adding Hospital C's data, particularly for classes intentionally weakly represented in the initial federation. Analytical improvement is interpreted independently from governance correctness because either property may hold without the other.
 
-Mode 1B extends the governance evaluation to computational participation by examining whether a bounded inference capability remains effective at runtime without creating alternative paths to privileged federation operations. The evaluation therefore concerns conformance between admitted capability and effective execution rather than general claims about agent safety, autonomy, or model reliability.
+Mode 1B extends the governance evaluation to a composed interaction involving a computational participant, a restricted source result, and a policy-authorised derivative. The evaluation examines whether direct consumption of the restricted result remains denied while an authorised rebind and independently governed consumption of the derivative can proceed without transferring source-consumption rights to the recipient. The criterion concerns conformance between admitted capabilities and effective execution rather than general claims about agent safety, autonomy, or model reliability.
+
+
+% ===================== Section 5 ======================
+\section{Results}
+
+\subsection{Admission behaviour and decision evidence}
+
+The OpenHealth implementation produced explicit admission decisions for permitted and rejected requests at the federation boundary. In the present study, \emph{evidence} denotes the signed, machine-generated decision artefact emitted by the admission mechanism for each evaluated request. It is distinct from the capability credential presented by the requester, from application logs, and from the analytical artefacts produced by the federated-learning runtime. The approach follows earlier session-admission work in treating the decision outcome, its reason, and the bindings required to reconstruct the evaluated request as first-class experimental outputs [Fenoglio \& Treleaven, 2026].
+
+Each OpenHealth decision record identifies the admission event and timestamp, records the ALLOW or DENY outcome and reason, and associates the requester and holder-binding result with the relevant organisational and sponsorship information. The record also captures the requested action, purpose and tissue scope, the governing federation envelope, the policy hash, and the related model run when applicable. Request and credential identifiers bind the decision to the specific presentation that was evaluated, while an independent evidence signature protects the integrity of the resulting artefact.
+
+The resulting evidence is adjudicable rather than merely observable. A verifier possessing the federation's public trust anchor can check the signature and inspect the recorded outcome, reason, request bindings, and governance state without relying on mutable dashboard state or reconstructing the historical configuration of the Flower runtime. Evidence therefore establishes what governance decision was made under which stated conditions; it does not assert that the subsequent analytical result was clinically correct.
+
+\begin{table}[htbp]
+\centering
+\caption{Principal elements of an OpenHealth admission-evidence record.}
+\label{tab:evidence-record}
+\small
+\begin{tabularx}{\textwidth}{
+    >{\raggedright\arraybackslash}p{3.4cm}
+    >{\raggedright\arraybackslash}p{5.1cm}
+    >{\raggedright\arraybackslash}X
+}
+\toprule
+\textbf{Evidence element} &
+\textbf{Representative content} &
+\textbf{Audit role} \\
+\midrule
+
+Decision
+&
+Decision identifier, timestamp, ALLOW or DENY, reason
+&
+Identifies the outcome produced at the admission boundary and why it was reached.
+\\
+
+\addlinespace
+
+Principal and accountability
+&
+Subject, actor type, issuing organisation, sponsorship relation, requester-binding result
+&
+Associates the decision with the participant and the authority relation under which the request was made.
+\\
+
+\addlinespace
+
+Requested activity
+&
+Operation, purpose, resource, requested tissue scope
+&
+Records the activity against which the presented capability was evaluated.
+\\
+
+\addlinespace
+
+Governed context
+&
+Federation envelope, policy hash, related model run when applicable
+&
+Binds the decision to the governance state and operational context in which it was valid.
+\\
+
+\addlinespace
+
+Request and credential binding
+&
+Request identifier, capability-credential fingerprint
+&
+Distinguishes the evaluated presentation from other requests or credentials.
+\\
+
+\addlinespace
+
+Integrity
+&
+Signed decision artefact, evidence-key identifier
+&
+Allows later verification that the recorded decision has not been modified.
+\\
+
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Positive and negative tests were used to determine whether the admission boundary preserved the capability relations specified by the federation. Table~\ref{tab:admission-results} summarises the principal cases. Ordinary member participation, Hospital C's sponsored contribution, attempted model consumption outside Hospital C's capability, scope violations, holder-binding failure, and federation-envelope mismatch are evaluated independently. Each case produces its own decision record, so a DENY remains an observable governance event rather than being inferred from the absence of a successful runtime operation.
+
+\begin{table}[htbp]
+\centering
+\caption{Admission and capability-conformance results.}
+\label{tab:admission-results}
+\small
+\begin{tabularx}{\textwidth}{
+    >{\raggedright\arraybackslash}p{5.0cm}
+    >{\centering\arraybackslash}p{1.7cm}
+    >{\centering\arraybackslash}p{1.8cm}
+    >{\raggedright\arraybackslash}X
+}
+\toprule
+\textbf{Test condition} &
+\textbf{Expected} &
+\textbf{Observed} &
+\textbf{Decision evidence} \\
+\midrule
+
+Established member requests an operation within the admitted capability
+&
+ALLOW
+&
+ALLOW
+&
+Capability match
+\\
+
+\addlinespace
+
+Hospital C submits an update for the admitted federated-training purpose
+&
+ALLOW
+&
+ALLOW
+&
+Capability match under sponsored contribution
+\\
+
+\addlinespace
+
+Hospital C requests model consumption without the corresponding capability
+&
+DENY
+&
+DENY
+&
+Capability violation
+\\
+
+\addlinespace
+
+Requested pathology scope exceeds the capability scope
+&
+DENY
+&
+DENY
+&
+Capability scope exceeded
+\\
+
+\addlinespace
+
+Presented proof does not match the credential holder binding
+&
+DENY
+&
+DENY
+&
+Holder-binding mismatch
+\\
+
+\addlinespace
+
+Presented capability is bound to a different federation envelope
+&
+DENY
+&
+DENY
+&
+Envelope mismatch
+\\
+
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Governed expansion from A+B to A+B+C}
+
+The A+B configuration established the initial federation with two existing members participating in federated training under the same governed context. Mode 1A introduced Hospital C through sponsorship without changing the status or capabilities of Hospitals A and B and without modifying the Flower training and aggregation procedure. Hospital C was admitted for the \texttt{submit\_update} operation associated with the federated-training purpose, and the corresponding admission evidence remained associated with the governed context and executed model run.
+
+The complementary negative test preserved the asymmetric relation established for Hospital C. A request to query or otherwise consume the resulting model was denied because model consumption was absent from the sponsored contributor's capability set. Successful contribution combined with unsuccessful model consumption therefore provides the primary governance result for Mode 1A. Federation growth occurred by adding a bounded participation relation rather than by promoting Hospital C to an equivalent member or transferring the capabilities of its sponsor.
+
+\subsection{Analytical effect of the additional contribution}
+
+PathMNIST model performance was measured to verify that Hospital C's admitted contribution produced an observable analytical consequence rather than a purely administrative change. The analytical comparison uses an A+B control trained under conditions matched to the A+B+C run. An earlier A+B baseline used during development is not treated as the comparative reference where its training duration differs from the governed-expansion experiment.
+
+\begin{table}[htbp]
+\centering
+\caption{Matched analytical comparison between the A+B control and the governed A+B+C expansion. Values will be completed after the final server run.}
+\label{tab:pathmnist-results}
+\small
+\begin{tabularx}{\textwidth}{
+    >{\raggedright\arraybackslash}X
+    >{\centering\arraybackslash}p{3.0cm}
+    >{\centering\arraybackslash}p{3.0cm}
+}
+\toprule
+\textbf{Metric} &
+\textbf{A+B control} &
+\textbf{A+B+C} \\
+\midrule
+
+Overall accuracy
+&
+[XX]
+&
+[XX]
+\\
+
+Macro accuracy
+&
+[XX]
+&
+[XX]
+\\
+
+Cancer-associated stroma, class 7
+&
+[XX]
+&
+[XX]
+\\
+
+Colorectal adenocarcinoma epithelium, class 8
+&
+[XX]
+&
+[XX]
+\\
+
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The final values in Table~\ref{tab:pathmnist-results} are interpreted as evidence of the workload effect of adding Hospital C rather than as validation of Federated Computing. Governance correctness is established by preservation of the admitted capability relations and their decision evidence, whereas model performance depends on the selected data distribution, learning procedure, and training conditions. Separating the two outcomes prevents an accuracy improvement from being treated as evidence that admission was correctly governed.
+
+\subsection{AI-agent conformance and rebind}
+
+Mode 1B evaluates whether the same governance semantics remain effective when a computational participant mediates access to a model result. Audrey requests cancer-related information that she is not authorised to consume in its unrestricted form. Direct source consumption is therefore expected to produce DENY, while the agent may exercise separately admitted inference and rebind operations within its own holder-bound capability.
+
+The governed rebind produces a derivative representation consisting of a blurred image and a qualitative indication of prediction accuracy. Consumption of the derivative is evaluated independently from consumption of the source, allowing Audrey to be authorised for the rebound representation without acquiring the source-consumption right that was denied. The agent executes the transformation but does not become a source of authority for Audrey, and federation policy rather than the agent determines the permitted derivative.
+
+\begin{table}[htbp]
+\centering
+\caption{Mode 1B conformance cases. Observed outcomes will be completed after the final implementation run.}
+\label{tab:agent-results}
+\small
+\begin{tabularx}{\textwidth}{
+    >{\raggedright\arraybackslash}p{5.1cm}
+    >{\centering\arraybackslash}p{1.7cm}
+    >{\centering\arraybackslash}p{1.9cm}
+    >{\raggedright\arraybackslash}X
+}
+\toprule
+\textbf{Governed operation} &
+\textbf{Expected} &
+\textbf{Observed} &
+\textbf{Property tested} \\
+\midrule
+
+Audrey requests unrestricted cancer-related source output
+&
+DENY
+&
+[TBC]
+&
+Source-consumption capability remains absent
+\\
+
+\addlinespace
+
+Agent performs admitted inference within its bounded capability
+&
+ALLOW
+&
+[TBC]
+&
+Agent authority remains explicit and holder-bound
+\\
+
+\addlinespace
+
+Agent invokes the policy-authorised rebind operation
+&
+ALLOW
+&
+[TBC]
+&
+Transformation follows federation policy rather than agent-defined release semantics
+\\
+
+\addlinespace
+
+Audrey consumes the rebound derivative under the corresponding capability relation
+&
+ALLOW
+&
+[TBC]
+&
+Derivative consumption is evaluated independently from source consumption
+\\
+
+\addlinespace
+
+Agent attempts a privileged governance path outside the admitted execution route
+&
+DENY
+&
+[TBC]
+&
+Execution cannot enlarge federation authority
+\\
+
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The experiment therefore tests compositional governance rather than agent intelligence. A computational participant may transform information using its own admitted capability without transferring that capability to another principal, while the recipient's subsequent operation remains independently governed within the same federation context.
+
+\subsection{Admission overhead}
+
+Admission adds cryptographic verification, capability matching, evidence signing, and evidence persistence to the request path. The current implementation records component timings for ECT verification, holder-proof verification, capability matching, decision-record signing and persistence, together with the complete admission check. The final benchmark will be rerun on the current OpenHealth deployment so that the measurements correspond to the implementation evaluated in this paper rather than to the earlier session-admission prototype.
+
+\begin{table}[htbp]
+\centering
+\caption{Admission overhead in the current OpenHealth implementation. Values will be completed after the final server benchmark.}
+\label{tab:admission-overhead}
+\small
+\begin{tabularx}{\textwidth}{
+    >{\raggedright\arraybackslash}X
+    >{\centering\arraybackslash}p{1.5cm}
+    >{\centering\arraybackslash}p{2.2cm}
+    >{\centering\arraybackslash}p{2.2cm}
+    >{\centering\arraybackslash}p{2.2cm}
+}
+\toprule
+\textbf{Decision path} &
+\textbf{$n$} &
+\textbf{Median full check (ms)} &
+\textbf{p95 full check (ms)} &
+\textbf{Median evidence emission (ms)} \\
+\midrule
+
+ALLOW, valid capability and holder proof
+&
+[N]
+&
+[XX]
+&
+[XX]
+&
+[XX]
+\\
+
+\addlinespace
+
+DENY, capability or scope mismatch
+&
+[N]
+&
+[XX]
+&
+[XX]
+&
+[XX]
+\\
+
+\addlinespace
+
+DENY, holder-binding mismatch
+&
+[N]
+&
+[XX]
+&
+[XX]
+&
+[XX]
+\\
+
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The benchmark is intended as a deployability check rather than as a throughput study. Component timings may be reported separately where useful, but the relevant systems question is whether explicit admission and signed decision evidence introduce material overhead relative to the federated activity they govern.
+
+% ===================== Section 6 ======================
+\section{Discussion}
+
+\subsection{Principal findings}
+
+The OpenHealth demonstrator supports the central proposition of the study by representing federation growth as a governed change in participation relations rather than as unrestricted technical onboarding. Hospital C can contribute to federated training without acquiring model-consumption rights, while positive and negative admission decisions remain tied to the federation envelope and are retained as signed evidence. Mode 1B extends the same structure to computational participation by separating the agent's execution capability from the rights of the human participant requesting the result.
+
+Model accuracy is consequently a secondary outcome in the present evaluation. PathMNIST provides a controlled workload in which the additional contribution from Hospital C can have a visible analytical effect, but improved classification performance neither establishes nor measures governance correctness. The primary result is preservation of the relations asserted before execution, including contribution without consumption, holder-bound admission, federation-context binding, and independent governance of source and derivative consumption.
+
+\subsection{From fixed collaboration to governed federation evolution}
+
+Many collaborative infrastructures are designed around an initially established set of organisations, resources, and analytical operations. Their technical mechanisms may scale effectively once those assumptions are fixed, yet movement from pilot to operational service can require the collaboration itself to change. OpenHealth addresses that transition by treating participation, resources, and operations as separable dimensions whose relations can evolve under an existing governance context.
+
+The concept of a federated service follows from the same separation. An operational function can be exposed within the federation while remaining under the control of its provider, with the federation governing the authority, purpose, capability, scope, and context under which it may be invoked. Flower-based training and inference provide the concrete services used in the demonstrator, but the governance structure does not depend on Flower and can in principle accommodate other analytical or data-processing services without absorbing them into the federation's constitutive layer.
+
+\subsection{Relationship to existing health-data infrastructure}
+
+OpenHealth is not intended to replace Trusted Research Environments, identity federation, IAM, RBAC or ABAC, data-space governance, or federated-learning frameworks. Each addresses a different boundary. Organisation-local controls remain responsible for identities, infrastructure, users, and resources within an administrative domain, while analytical runtimes remain responsible for executing admitted computation. The additional Federated Computing boundary establishes whether a participant may enter a particular federated activity under the current shared governance conditions.
+
+The distinction becomes important when collaborations evolve asymmetrically. Conventional onboarding may be sufficient when every new organisation is intended to receive the same role and operational privileges as existing members. Hospital C represents a different case because the desired relation is deliberately narrower. Sponsorship establishes an accountable route into a particular activity without functioning as delegation or membership inheritance, allowing the federation to change without requiring uniformity of rights.
+
+\subsection{Decision evidence as an operational governance artefact}
+
+Explicit decision evidence provides the link between governance intent and observed participation. General service logs can show that an endpoint was called or that a workflow succeeded, but they may not preserve the authority, purpose, capability, policy state, and federation context under which the operation was allowed or denied. OpenHealth records those elements at the admission boundary and signs the resulting artefact before correlating it with the corresponding run.
+
+The resulting evidence supports more than retrospective audit. Negative tests become first-class experimental observations because a denied request produces a reasoned and independently verifiable artefact rather than disappearing as a failed application path. Governance behaviour can consequently be tested as an executable systems property rather than inferred from configuration or policy prose.
+
+\subsection{AI-agent participation and governed transformation}
+
+Mode 1B illustrates why an AI agent does not require a new constitutive category in the federation. The agent remains a computational principal with its own identity, holder binding, and bounded capabilities, while its planning strategy or runtime determines how an admitted operation is executed. Runtime isolation prevents bypass paths but does not itself establish federation authority.
+
+Rebind adds a further relation without changing that principle. The agent may transform a restricted result into a policy-authorised derivative, while the recipient's rights to that derivative are evaluated independently from rights to the source. The blurred representation used in the demonstrator is therefore not treated as a differential-privacy mechanism or as an agent-defined judgement that an output is safe. Its significance lies in the governed transformation and the independent capability relation attached to subsequent consumption. The construction provides an operational connection to the earlier Value--Identity Model, in which transformations of data and their governance bindings are considered jointly [VIM reference].
+
+The same layering limits the claim that can be made about agent safety. Admission establishes legitimate participation at a federation boundary, whereas sandboxing, tool restrictions, network isolation, monitoring, and approval mechanisms constrain behaviour within the execution environment. Neither layer can substitute for the other, and the OpenHealth result concerns conformance between them rather than predictability of the agent itself.
+
+\subsection{Limitations and future work}
+
+The demonstrator remains a proof of concept rather than a production health-data infrastructure. PathMNIST is a controlled surrogate that allows governance relations and class-specific analytical effects to be exercised reproducibly, but the study does not establish clinical effectiveness or performance on heterogeneous operational health systems. The federation contains a small number of synthetic organisations and participation patterns, and the evaluation does not address the organisational processes required to establish real inter-institutional agreements.
+
+The admission benchmark is limited to the current implementation and deployment environment and should be interpreted as a request-path sanity check rather than as evidence of production throughput or large-scale concurrency. Key rotation, revocation, recovery, long-duration policy evolution, and operational incident handling require further evaluation. History-dependent controls such as cumulative disclosure limits belong to a procedural layer beyond the per-request admission mechanism evaluated here.
+
+Mode 1B examines a deliberately bounded agent interaction and does not generalise to arbitrary autonomous behaviour, unrestricted tool use, or unsupervised clinical decision-making. Further work should evaluate additional computational participants and federated services while preserving the separation between federation capability and runtime capability. Deployments across different analytical frameworks and health-data environments would also test whether the governance boundary remains portable when the underlying execution substrate changes.
+
+% ===================== Section 7 ======================
+\section{Conclusion}
+
+OpenHealth reframes the transition from federated pilot to operational service as a problem of governed federation evolution. The demonstrator separates the establishment of a federation context, expression of bounded capabilities, admission of specific participation, execution by a conventional analytical runtime, and production of signed decision evidence. Federation growth can consequently occur through differentiated relations rather than through uniform expansion of membership and privileges.
+
+The Hospital C scenario shows how an additional organisation can contribute to federated training without acquiring model-consumption rights, while the AI-agent scenario extends the same semantics to a computational participant capable of producing a policy-authorised derivative without transferring source-consumption authority to the requesting user. Together, the scenarios illustrate how changes in participants and operations can be admitted while preserving explicit authority and capability boundaries.
+
+The principal contribution is therefore not a new federated-learning algorithm or a claim of improved clinical model performance. It is an executable governance boundary through which an existing collaboration can change while retaining auditable evidence of the conditions under which participation was allowed or denied. Such a boundary provides one route for moving federated health-data collaborations from fixed demonstrations towards services able to evolve without relinquishing organisational sovereignty.
 
 % ======================== ACK ============================
 \acks{All acknowledgements .}
