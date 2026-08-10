@@ -61,8 +61,15 @@
 \maketitle
 
 \begin{abstract}
-[TBD]
- 
+\textbf{Background:} Many digital health and artificial intelligence initiatives show promising results in pilot settings but do not progress to sustainable services. Pilots can operate within a predefined collaboration, whereas operational services must accommodate changes in participating organisations, available resources, and analytical capabilities without repeatedly reconstructing governance and technical arrangements.
+
+\textbf{Objective:} This study examines the pilot-to-service transition as a problem of governed federation evolution and evaluates whether OpenHealth can admit new forms of participation while preserving bounded capabilities, organisational sovereignty, and auditable decision evidence.
+
+\textbf{Methods:} OpenHealth implements Federated Computing as a governance layer separated from the analytical runtime. A governed federation context is established before execution, participants receive holder-bound capabilities, and an admission gateway produces explicit ALLOW or DENY decisions before requested operations proceed. The proof of concept uses Flower and PathMNIST with an initial federation comprising Hospitals A and B. Mode 1A introduces Hospital C as a sponsored contributor permitted to submit training updates but not to consume the resulting model. Mode 1B examines bounded AI-agent participation in which a restricted result may be transformed through a policy-authorised rebind into a derivative whose consumption is governed independently from the source. Evaluation considers admission conformance, signed decision evidence, analytical effects of the additional contribution, and admission overhead.
+
+\textbf{Results:} The demonstrator admitted valid member operations and Hospital C's sponsored contribution while denying model consumption outside Hospital C's capability, scope violations, holder-binding mismatch, and federation-envelope mismatch. Each evaluated request generated a signed evidence artefact recording the decision, reason, participant and request bindings, governance context, and related model run when applicable. Under matched training conditions, the A+B control achieved [XX] overall and [XX] macro accuracy compared with [XX] and [XX], respectively, after Hospital C joined; class-specific results are reported for the intentionally weakly represented cancer-related classes. In Mode 1B, unrestricted cancer-related source consumption by the requesting user was [TBC], while policy-authorised rebind and consumption of the resulting derivative were [TBC]. Median admission latency was [XX] ms for ALLOW and [XX] ms for the principal DENY path.
+
+\textbf{Conclusions:} OpenHealth demonstrates how a federated health-data collaboration can evolve through differentiated participation relations rather than uniform expansion of membership and privileges. The principal contribution is an executable governance boundary that preserves capability relations and produces adjudicable evidence independently from the federated-learning runtime. The proof of concept does not establish clinical effectiveness or production-scale performance, which require further evaluation.
 \end{abstract}
 
 \begin{keywords}
