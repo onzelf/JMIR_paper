@@ -350,23 +350,13 @@ Agent participation nevertheless introduces an additional operational distinctio
 Admission cannot certify that an AI agent will behave correctly after execution begins. Sandboxing, network isolation, tool policies, approval mechanisms, monitoring, and other runtime controls remain complementary mechanisms for constraining operational behaviour. Their presence does not expand the participation relation established by the federation, and an execution framework must not silently redefine federation semantics merely because a technically reachable action is available. The relevant assurance requirement is therefore conformance between the operational possibilities exposed to the agent and the capabilities established by the governed admission decision. Section 4 evaluates this requirement through a bounded AI-agent participation scenario while preserving the same federation-governance model used for human and conventional computational participants.
 
 % ===================== Section 4 ======================
-\section{OpenHealth PoC Implementation }
+\section{OpenHealth Implementation and Experimental Design}
 
-\subsection{System architecture }
+\subsection{System architecture}
 
-The OpenHealth proof of concept (PoC) implements a governed federated learning environment in which participation is established for a specific federation session before computation begins. The implementation separates the governance and admission plane from the federated learning runtime. This allows the conditions under which an organisation or actor participates to be evaluated independently from the technology executing the subsequent computation. 
+The OpenHealth demonstrator implements a governed federated learning environment in which participation is established before execution of the corresponding distributed computation. The architecture separates the governance and admission plane from the analytical runtime so that the conditions under which an organisation or computational participant acts can be evaluated independently from the technology executing the work. Figure~\ref{fig:openhealth-architecture} summarises the implementation as four interacting areas comprising the federation-authority and participant interfaces, the OpenHealth governance and orchestration services, the federated learning runtime, and the participating hospital sites.
 
-The architecture contains four functional areas: 
-\begin{enumerate}
-    \item the user and federation-authority interfaces  
-\item the OpenHealth governance and orchestration services  
-\item the federated learning runtime  
-\item the participating hospital sites  
-\end{enumerate}
-
-The separation between these areas is intentional. OpenHealth does not replace the federated learning framework. Flower remains responsible for distributed model training and aggregation. OpenHealth determines whether participation in a particular federation session is legitimate and under which capabilities that participation may occur. 
-
-Figure 1 presents the proof-of-concept architecture using a C4-style container view. 
+Flower remains responsible for distributed model training and aggregation, while OpenHealth governs participation at the federation boundary. Each hospital retains its PathMNIST partition locally and exchanges model updates through the Flower workflow rather than transferring raw images between sites. The separation isolates the OpenHealth contribution to the governance of participation rather than to the learning algorithm itself and allows the analytical runtime to remain conventional.
 
 \begin{figure}[htbp]
     \centering
@@ -384,190 +374,130 @@ Figure 1 presents the proof-of-concept architecture using a C4-style container v
     \label{fig:openhealth-architecture}
 \end{figure}
 
+\subsection{Governance and admission workflow}
 
-\subsection{Federation context and session-bound admission }
+Before a federated activity begins, the federation authority establishes a governed context represented by an envelope. Creation, binding, and approval of the envelope associate the activity with the applicable constitutional and policy state, while the KYO-based approval procedure provides the governance mechanism through which that context is established. The resulting \texttt{envelope\_id} is the admission binding for subsequent participation decisions and remains distinct from the operational model run created after admission.
 
-Admission in OpenHealth is not a persistent statement that an actor is generally trusted or authorised. It is evaluated relative to a specific governed federation context. 
+Participants receive explicitly issued capability credentials through the OpenHealth issuer service. The ECT used by the demonstrator expresses the bounded resource, operation, purpose, and scope available to its holder and remains associated with the governed federation context. Issuance does not itself constitute admission and does not confer general federation membership. A participant may therefore possess a capability for a narrowly specified activity without acquiring capabilities available to other federation members.
 
-Before a federated activity begins, the federation authority creates an envelope representing the session-specific governance context. The envelope identifies the context in which subsequent participation decisions are valid and binds the activity to the applicable constitutional and policy state. 
+The verifier and gatekeeper implement the admission boundary. A request is evaluated against the participant identity and holder binding, the presented ECT, the \texttt{envelope\_id}, the requested operation, purpose, resource and scope, and the applicable policy and constitutional state. Evaluation produces an explicit ALLOW or DENY decision before the requested operational workflow proceeds. Successful authentication or possession of a credential is therefore insufficient on its own because admission depends on conformance between the requested activity, the issued capability, and the current governed context.
 
-The envelope\_id therefore acts as the admission binding for the session. This distinction is central to the implementation. Authentication establishes who an actor is. A capability credential represents what that actor may request. Neither independently establishes the right to participate in an arbitrary federated activity. Admission is evaluated when the capability is presented within the governed context identified by the envelope. 
+\subsection{Runtime, state, and decision evidence}
 
-The resulting relation can be expressed conceptually as: identity + capability + governed session context → ALLOW or DENY. The decision is consequently contextual rather than global. A capability valid for one federation context does not imply unrestricted participation outside that context. 
+Participant and federation-authority operations are exposed through the React/Vite interface and routed through the Nginx gateway to the OpenHealth services. The \texttt{fc-hub} FastAPI service coordinates the governed workflow and maintains the association between the current federation context and the operational federated-learning run, but policy evaluation remains the responsibility of the verifier and gatekeeper. The interface and orchestration services consequently expose governance state and invoke governed operations without becoming the source of governance semantics.
 
-This is what makes the mechanism session-bound admission rather than conventional account-level access control. 
+Constitutional and policy artefacts, active federation envelopes, and admission evidence are maintained separately from the Flower runtime. Each evaluated request produces a structured decision record containing the relevant participant, governed context, requested capability, purpose and scope, decision outcome, and reason. Decision evidence is generated at the admission boundary rather than reconstructed retrospectively from application logs, thereby preserving a direct relation between the governance conditions asserted before execution and the operational decision that followed.
 
-\subsection{Governance establishment }
+The run registry maintains a traceable association between the governed federation context and the model run executed by Flower without collapsing the two into a single object. Capability credentials remain bound to the federation envelope rather than to an arbitrary future model run, while a decision concerning a particular executed run may record the corresponding run association when applicable. Governance context, capability, admission decision, and model run therefore remain distinct artefacts connected through explicit relations.
 
-The federation authority establishes the governance context before operational execution. In the proof of concept, this process includes creation of the envelope and explicit binding and approval of the governance context. The approval process is protected by the governance mechanisms implemented in OpenHealth, including the KYO-based binding procedure and the required approvals. 
+\subsection{Experimental scenarios}
 
-The resulting governance state provides the basis against which later admission requests are evaluated. The governance state contains the relevant constitutional and policy information together with the active envelopes and the evidence generated by admission decisions. These artefacts are maintained independently from the Flower runtime. This separation preserves an important architectural invariant. The runtime does not define the legitimacy of participation. It executes computation only after that legitimacy has been established by the governance layer. 
+The experimental design uses PathMNIST to examine governed evolution of an initially fixed federation. Hospitals A and B establish the baseline federation, after which participation is extended first through Hospital C as a sponsored contributor and then through a bounded AI-agent participation scenario. The scenarios are designed to separate governance outcomes from analytical outcomes so that successful admission does not by itself imply improved model performance and improved model performance does not validate the governance mechanism.
 
-\subsection{ Capability issuance }
+\subsubsection{A+B baseline}
 
-Participants interact with the federation through explicitly issued capability credentials. The OpenHealth issuer service produces an ECT, the capability credential used by the proof of concept. The ECT is bound to the relevant governance context and expresses the capabilities available to the holder, including the permitted resource, operation, purpose, and applicable scope. 
+Hospitals A and B constitute the initial federation and participate as established members under the same governed federation context. Each hospital retains its local PathMNIST partition and operates a Flower client that performs local training and submits model updates to the federated aggregation process. Raw images remain within the corresponding hospital environment, while the shared model is produced through conventional federated training after the required participation has been admitted.
 
-The ECT is not itself an admission decision. It provides evidence that a participant possesses a capability that may be presented for admission. The gatekeeper subsequently evaluates that capability in the context of the requested activity. This distinction prevents capability issuance from becoming equivalent to unrestricted federation membership. A participant may therefore hold a narrowly scoped capability without acquiring other capabilities available to existing federation members. We exploit this property directly in the Hospital C experiment. 
+The A+B data distribution is intentionally heterogeneous. Selected PathMNIST classes are weakly represented across Hospitals A and B, creating a controlled limitation in the initial federation rather than an artificial failure of the learning procedure. The resulting configuration provides a reference against which the effect of adding Hospital C can be evaluated while preserving the same learning architecture and governance boundary.
 
-\subsection{ Admission gateway }
+Two roles of the A+B configuration are distinguished in the evaluation. The initial A+B run establishes the governance and system baseline in which the federation consists only of its existing members. For the analytical comparison, an A+B control is trained under conditions matched to the A+B+C configuration so that changes in model performance can be attributed to the additional contribution from Hospital C rather than to a different number of training rounds or another experimental condition.
 
-The verifier and gatekeeper constitute the admission boundary of the OpenHealth proof of concept. When a participant requests entry into a governed activity, the gatekeeper evaluates the request against: 
-\begin{itemize}
-    \item the participant identity  
+\subsubsection{Mode 1A: governed expansion with a sponsored contributor}
 
- \item the presented ECT  
+Hospital C is incorporated into the federation as a sponsored contributor rather than as an equivalent federation member. Sponsorship establishes an accountable participation relation through which a new organisation may undertake a bounded activity without inheriting the capabilities of the sponsoring member. The capability issued to Hospital C is restricted to the \texttt{submit\_update} operation for the specified federated-training purpose and remains bound to the current governed federation context. Successful admission authorises participation in that training activity without altering Hospital C's membership status or conferring capabilities available to existing federation members.
 
- \item the envelope\_id  
+Model consumption is represented independently from contribution and is absent from the capability granted to Hospital C. The implementation consequently permits Hospital C to contribute model updates to an admitted federated-training activity while remaining unable to query or otherwise consume the resulting model. Contribution and consumption are thereby governed as distinct relations rather than inferred from participation or organisational association.
 
- \item the requested operation  
+Hospital C is allocated substantial representation of selected PathMNIST classes that are intentionally weakly represented in the A+B configuration. Mode 1A therefore produces two independent evaluation dimensions. The governance dimension examines whether contribution is admitted while operations outside the granted capability, including model consumption, remain denied. The analytical dimension compares the matched A+B control with the A+B+C model to determine whether the additional data contribution changes model performance.
 
- \item the stated purpose  
+\subsubsection{Mode 1B: bounded AI-agent participation}
 
- \item the requested resource and scope  
+Mode 1B introduces an AI agent as a computational participant rather than as an additional data-holding member of the federation. The agent is assigned a dedicated identity and a narrowly bounded inference capability associated with the governed federation context. It does not participate in training and does not inherit the capabilities of a sponsoring organisation. The relevant resource is the model produced by the governed federation, while the permitted operation is restricted to the inference activity expressed by the issued capability.
 
- \item the applicable policy and constitutional state  
-\end{itemize}
+The execution environment is separated from the governance services so that runtime reachability cannot silently enlarge the admitted participation relation. The agent operates within an isolated execution segment that exposes the permitted inference path while withholding direct access to privileged governance components, credential-signing functions, and decision-evidence keys. The isolation mechanism is therefore not treated as a substitute for admission; rather, it constrains the operational environment so that the capabilities available after admission remain consistent with the governance decision made at the federation boundary.
 
-The result is an explicit ALLOW or DENY decision produced before the requested computation is executed. 
+Mode 1B is evaluated as a conformance experiment rather than as a demonstration that an AI agent is intrinsically safe or predictable. The relevant systems question is whether actions outside the admitted authority, purpose, and capability can acquire effects beyond the governed boundary. Agent-specific runtime controls and the federation admission mechanism consequently address different layers of the same execution path.
 
-The gatekeeper also generates evidence describing the decision and its reason. Consequently, both successful and unsuccessful admission attempts become observable governance events rather than implicit outcomes of runtime configuration. 
+\subsection{AI-Agent Participation and Governance Invariants}
 
-This is different from authenticating a Flower client or checking a role after execution has already entered the federated runtime. The OpenHealth decision establishes whether that participant may enter the specified activity at all. 
+The Mode 1B design makes explicit a set of governance invariants that remain independent from the agent framework used to implement the computational participant. An agent runtime may determine how tasks are planned and tools are invoked, but the execution mechanism cannot redefine the authority under which the participant entered the federation.
 
-\subsection{User and orchestration layer }
+\begin{table}[htbp]
+\centering
+\caption{Federated Computing governance invariants for AI-agent participation.}
+\label{tab:agent-governance-invariants}
 
-Users interact with the proof of concept through the React/Vite dashboard that separates federation administration from participant operations. Requests are routed through the Nginx gateway to the corresponding OpenHealth services. 
+\begin{tabularx}{\textwidth}{
+    >{\raggedright\arraybackslash}p{4.2cm}
+    >{\raggedright\arraybackslash}X
+}
+\toprule
+\textbf{Governance invariant} &
+\textbf{Operational consequence for AI-agent participation} \\
+\midrule
 
-The fc-hub FastAPI service provides the orchestration layer. It coordinates the governed workflow and maintains the association between the current federation context and the operational federated-learning run. 
+Admission is governed
+&
+Technical reachability is insufficient; the computational participant must be explicitly admitted to the requested federation activity.
+\\
 
-The orchestration layer does not itself determine policy. Admission decisions remain the responsibility of the verifier and gatekeeper. 
+\addlinespace
 
-Similarly, the dashboard is not the source of governance truth. It exposes the state and operations of the underlying services. 
+Authority is explicit and bounded
+&
+The agent acts only within the authority, purpose, operation, resource, and scope represented by the admitted capability.
+\\
 
-This distinction is important because the PoC is intended to demonstrate governance enforced by the system rather than governance represented only in a user interface. 
+\addlinespace
 
-\subsection{Governance state and evidence }
+Sponsorship is distinct from delegation
+&
+A sponsoring organisation establishes an accountable participation route without transferring its own federation capabilities to the agent.
+\\
 
-Governance state is maintained separately from the federated model and training runtime. 
+\addlinespace
 
-As illustrated in Figure 1, the verifier has access to the constitutional and policy artefacts required for admission evaluation. The implementation also maintains the active federation envelopes and the resulting decision evidence. 
+Provenance is distinct from accountability
+&
+The origin of the model, agent framework, runtime, or provider does not by itself establish the authority under which the agent participates.
+\\
 
-For every evaluated request, the evidence record captures the relevant decision context, including the actor, requested capability, purpose, scope, decision outcome, and reason. 
+\addlinespace
 
-The evidence trail therefore allows a later observer to distinguish: 
-\begin{itemize}
-    \item who requested participation  
+Credentials remain bound to the federation envelope
+&
+A capability issued for one governed context does not become a generic entitlement that can be reused across unrelated federation activities.
+\\
 
-\item under which governed session  
+\addlinespace
 
-\item for which operation  
+Contribution does not imply consumption
+&
+A contribution capability, where present, remains independent from model-query or model-use capabilities.
+\\
 
-\item for which purpose  
+\addlinespace
 
-\item with which capability  
+Execution cannot redefine governance
+&
+Tools, network paths, or runtime functions that are technically available cannot enlarge the participation relation established by the admission decision.
+\\
 
-\item whether participation was admitted  
+\bottomrule
+\end{tabularx}
 
-\item why the decision was reached  
-\end{itemize}
+\end{table}
 
-This evidence is produced by the admission process rather than inferred retrospectively from application logs. 
+For an admitted computational participant, conformance requires the effective operational possibilities exposed by the execution environment to remain within the capabilities established by the governed admission decision. The criterion does not assert that runtime behaviour will be deterministic or error-free. It instead makes the preservation of the asserted governance boundary observable and testable even when the internal behaviour of the computational participant may vary.
 
-That is an important part of the PoC claim. 
+\subsection{Evaluation criteria}
 
- 
+The demonstrator is evaluated along complementary governance and analytical dimensions. Governance behaviour is assessed through positive and negative admission tests covering valid session admission, capability mismatch, holder-binding mismatch, sponsorship-based contribution, denial of model consumption to a contribution-only participant, and preservation of federation-context binding. Decision evidence is examined for the ability to associate ALLOW and DENY outcomes with the participant, requested operation and purpose, governed context, reason, and relevant model run when applicable.
 
-\subsection{Run registry and model association }
+The analytical effect of governed federation expansion is evaluated by comparing an A+B control with the A+B+C configuration under matched training conditions. Overall, macro-level, and class-level model performance provide evidence of the analytical consequence of adding Hospital C's data, particularly for classes intentionally weakly represented in the initial federation. Analytical improvement is interpreted independently from governance correctness because either property may hold without the other.
 
-The proof of concept maintains an explicit association between the governed federation context and the corresponding model run. 
+Mode 1B extends the governance evaluation to computational participation by examining whether a bounded inference capability remains effective at runtime without creating alternative paths to privileged federation operations. The evaluation therefore concerns conformance between admitted capability and effective execution rather than general claims about agent safety, autonomy, or model reliability.
 
-The run registry and model pointer shown in Figure 1 identify the operational model associated with the current federated activity. This allows the governance layer and the federated runtime to remain separate while retaining a traceable relationship between them. 
-
-The distinction between session admission and model execution is deliberate. 
-
-The capability credential is bound to the governed federation context rather than being treated as an unrestricted token for arbitrary future model runs. Where a request concerns a particular executed run, the corresponding admission decision can additionally record that run association. 
-
-This avoids collapsing three different concepts into one object: 
-
-governed session, capability, and executed model run. 
-
- 
-
-\subsection{Federated learning runtime }
-
-Once the required participation has been admitted, the operational computation is performed using Flower. 
-
-The Flower server coordinates federated training rounds and aggregates updates received from participating clients. Each hospital operates its own Flower client and trainer. 
-
-PathMNIST data remain within the corresponding hospital environment. The federated workflow exchanges the information required for model training rather than transferring the underlying raw images between participating hospitals. 
-
-The Flower runtime is therefore intentionally conventional. 
-
-The contribution of OpenHealth is not a new federated learning algorithm. It is the governance structure surrounding participation in that computation. 
-
-This architectural separation also makes the approach potentially applicable to analytical runtimes other than Flower. 
-
- 
-
-\subsection{ Baseline federation }
-
-The initial experimental configuration consists of Hospitals A and B. 
-
-Both participate as federation members and operate local PathMNIST partitions. Their Flower clients contribute to the federated training workflow according to the capabilities established by the federation. 
-
-This configuration provides the A+B baseline. The corresponding model is trained without data from Hospital C and provides the reference against which the later federation expansion is evaluated. 
-
-The data partitioning intentionally results in weaker representation of selected PathMNIST classes (colon cancer data vs normal tissue) in the A+B configuration. This gives the later Hospital C contribution an observable analytical role rather than making the additional participant merely decorative. 
-
- 
-
-\subsection{Sponsored contribution by Hospital C }
-
-The second configuration introduces Hospital C without converting it into an equivalent federation member. 
-
-Hospital C participates through a sponsorship relation established by an existing federation participant. The sponsored contributor receives a capability permitting participation in federated training through the submit\_update operation for the specified training purpose. 
-
-The capability does not include model-consumption rights. Consequently, the following two propositions are simultaneously true: 
-
-Hospital C may contribute to the federated model. 
-
-Hospital C may not query or consume that model merely because its contribution was admitted. 
-
-This asymmetric participation relation is intentional. 
-
-It demonstrates that federation growth need not be implemented by adding progressively more actors with identical privileges. OpenHealth permits a collaboration to expand through differentiated relations whose capabilities correspond to their purpose. 
-
-The Hospital C experiment therefore tests more than technical onboarding. It tests whether the federation can change its participation structure while preserving explicit capability boundaries. 
-
- 
-
-\subsection{Controlled A+B versus A+B+C experiment }
-
-The proof of concept compares three federation configurations. 
-
-\subsubsection{A+B baseline }
-
-Hospitals A and B train the federated model using their local PathMNIST partitions. 
-
-\subsubsection{A+B+C governed expansion with a sponsred guest (Mode 1A) }
-
-Hospital C participates as a sponsored contributor after successful session-bound admission and contributes additional training data while retaining its restricted capability set. 
-
-Hospital C was allocated substantial representation of selected PathMNIST classes that were intentionally weakly represented in the A+B baseline. The expanded federation therefore provides a controlled means of examining whether a governed change in participation produces an observable change in the resulting model. 
-
-The experiment has two independent outcomes: (i) The first is a governance outcome. Hospital C must be capable of contributing while remaining unable to perform operations outside its granted capability; (ii) the second is an analytical outcome. The A+B+C model can be compared with the A+B baseline to determine whether the additional data contribution alters model performance. These outcomes must not be conflated. Improved model performance does not validate the governance mechanism, and successful governance does not imply improved clinical performance. 
-
-\subsubsection{ A+B+C governed expansion with an AI agent guest (Mode 1B)} 
-
-[TBD] 
-
-Mode 1B scenario is intended to make this otherwise invisible property observable. The agent is admitted for a narrowly bounded inference capability, while its runtime environment is constructed so that alternative paths to federation governance services or privileged operations are unavailable. The experiment therefore tests not whether the agent is intrinsically “safe” or that can be bound, but whether the system remains conformant with the participation relation that the federation admitted. If the agent attempts to escape outside that relation, the relevant question becomes whether the architecture prevents the attempt from acquiring effects beyond the admitted boundary. 
-
-\subsection{What the proof of concept establishes }
-
-The PoC is designed to establish three architectural properties: (i) First, federation participation can be made session-specific rather than treated as a persistent property of an authenticated actor; (ii) second, a federation can expand through asymmetric participation relations. A contributor need not acquire the rights of a full member; (iii) third, admission decisions can be made before computation and retained as explicit evidence linked to the governed context in which they were made. 
-
-The experiment does not evaluate clinical effectiveness, production-scale deployment, or general health-system outcomes. Those questions remain outside the scope of this PoC. 
 % ======================== ACK ============================
 \acks{All acknowledgements .}
 
