@@ -313,114 +313,41 @@ OpenHealth consequently treats scaling as governed evolution across participants
 
 % ==================== section 3 ===================
 
-\section{OpenHealth as a Federated Computing Infrastructure }
+\section{OpenHealth as a Federated Computing Infrastructure}
 
-\subsection{The governance problem behind collaboration growth }
+\subsection{Federated Computing and the governed federation context}
 
-Moving a health data collaboration from a pilot towards an operational service requires more than scaling its computation. A pilot can usually begin with a predefined group of organisations, datasets, responsibilities, and analytical objectives. These arrangements can be negotiated and configured before the pilot starts. A service, however, must accommodate change. New organisations may contribute data, existing participants may assume new roles, additional analytical resources may become available, and different forms of participation may be required for different purposes. 
+OpenHealth applies Federated Computing to the problem of evolving cross-organisational health-data collaboration. Federated Computing treats the federation as a governed structure rather than as a collection of connected technical endpoints. Participating organisations retain sovereignty over their local data, infrastructure, identities, and internal access mechanisms, while the federation establishes the shared conditions under which cross-organisational participation becomes legitimate. The resulting boundary is complementary to organisation-local IAM, RBAC or ABAC, Trusted Research Environments, federated learning frameworks, and other operational controls because those mechanisms continue to govern activity within their respective administrative or computational domains.
 
-Federated learning addresses an important part of this problem by allowing organisations to collaborate without transferring their raw data to a common repository. It does not, by itself, determine under whose authority a new participant may enter a collaboration, which activities that participant may perform, for which purpose, or how such a decision can later be justified. 
+A governed federation context is established before operational execution. The context identifies the authorities participating in the collaboration, the applicable constitutional and policy state, the purpose of the activity, and the conditions under which participation may occur. OpenHealth represents the bounded context through a federation envelope, allowing later capability and admission decisions to be interpreted relative to the governance state under which they were made. Authentication alone therefore does not establish federation participation, nor does prior organisational eligibility imply entitlement to every subsequent activity.
 
-In operational cross-organisational systems these questions are commonly distributed across identity systems, access-control rules, contractual arrangements, application configuration, and orchestration logic. The resulting arrangement can work for a fixed collaboration, but becomes increasingly difficult to maintain when the collaboration changes. Different organisations operate different identity, policy, and infrastructure stacks; changes can require bespoke integration; and the reason why a particular activity was permitted may later need to be reconstructed from several independent systems. Similar problems have been identified for cross-silo federated learning, where configuration and organisation-specific IAM provide necessary controls but do not by themselves provide portable, session-scoped admission semantics and boundary-visible evidence.  
+The architecture separates governance establishment, capability expression, and operational execution. Governance establishment defines the conditions under which the collaborative context exists. Capability expression describes the bounded activities that a participant may request within that context. Operational execution performs the corresponding computation after admission. Keeping the three concerns distinct allows the participation structure to change without requiring the analytical runtime or organisation-local security mechanisms to become the representation of federation governance. It also prevents an operational configuration change from silently redefining the constitutive conditions of participation.
 
-OpenHealth therefore treats collaboration growth as a federation governance problem, rather than solely as a data-integration or machine-learning problem. 
+Federated Computing consequently provides a structure in which collaboration can evolve through changes in relations among participants, resources, and operations. A new organisation need not acquire the rights of an existing member, a newly contributed resource need not become available to every participant, and permission to perform one operation need not imply permission to perform another. The relevant governance question is therefore not whether an entity has been globally admitted to the federation, but whether a particular participation relation is legitimate within the governed context.
 
-\subsection{Federated Computing }
+\subsection{Session-bound admission}
 
-OpenHealth is based on Federated Computing, a model in which autonomous organisations collaborate without surrendering sovereignty over their local resources and operational systems. The federation provides a common governance structure for the collaboration while individual organisations retain control of their own data, infrastructure, identities, and internal access mechanisms. 
+Session-bound admission operationalises the transition from an established governance context to a requested federated activity. The admission decision asks whether a specific participant may perform a specified operation, for a defined purpose and scope, within the current governed context. An ALLOW or DENY outcome is produced before the requested activity reaches the corresponding analytical or operational runtime. Prior work on auditable session admission demonstrated that such a boundary can be inserted before a federated learning session without modifying the underlying training and aggregation procedure [Fenoglio \& Treleaven, 2026]. OpenHealth retains the boundary-oriented principle while applying it to a broader federation in which participation relations may change over time.
 
-This produces an important architectural separation. Local mechanisms answer organisation-specific questions such as which hospital employee may access a local system, which service account may invoke an internal API, or how local data are protected. The federation answers the cross-organisational question of whether a proposed form of participation is legitimate within the governed collaborative context. 
+Capabilities used at the admission boundary are contextual rather than global. A capability issued for one governed context does not constitute a reusable entitlement to arbitrary future activities, and possession of a capability is not equivalent to federation membership. Admission evaluates the holder, requested operation, purpose, resource and scope against the capability and the governance state associated with the federation envelope. The analytical runtime remains responsible for executing an admitted activity but does not determine the legitimacy of the participation relation that preceded it.
 
-Federated Computing therefore complements rather than replaces existing mechanisms. Identity federation, IAM, RBAC or ABAC, Trusted Research Environments, federated learning frameworks, and local security controls remain applicable inside their respective domains. The additional function is a common boundary at which participation in a federated activity can be evaluated before the activity is executed. 
+\subsubsection{Admission of participants}
 
-This separation was demonstrated in the FLICS architecture for cross-silo federated learning. There, session admission governs the transition into a collaborative FL session while conventional organisation-local IAM continues to govern activity within each participating organisation. OpenHealth generalises this principle to a health-data federation in which different organisations may participate under different governed relationships. 
+A participant may be a human actor or a conventional software process acting within the federation under an accountable organisational relationship. The issuer expresses the participant's permitted federation activity through a bounded capability associated with the current federation envelope. Holder binding connects the capability to the participant for whom it was issued, while purpose, operation, resource, and scope delimit the activity that may subsequently be requested. The gatekeeper then evaluates the presented capability against the current governed context rather than treating issuance itself as an admission decision.
 
-\subsection{Federation as a governed context }
+Separating issuance from admission supports differentiated participation. An established member may hold capabilities for both training and model use, whereas another organisation may receive only a contribution capability for a specified federated training activity. Sponsorship provides an accountable route through which such participation can be established without transferring the sponsor's rights to the sponsored participant. Sponsorship is therefore distinct from delegation, and the existence of a sponsorship relation does not convert the sponsored participant into an equivalent federation member.
 
-A central feature of the OpenHealth approach is that participation is not treated as a permanent property of an organisation simply because that organisation has been authenticated or previously approved. 
+The same separation applies across capability categories. Permission to contribute a resource or model update does not imply permission to consume the resulting model, and admission to one operation does not establish unrestricted participation in other operations. Provenance similarly records where a participant, credential, model, or other artefact originates, whereas accountability concerns the authority under which participation occurs and the party responsible for that relationship. Treating provenance and accountability as separate relations avoids inferring federation rights from technical origin or organisational association alone.
 
-Instead, participation is established within a specific governed context. Before computation begins, the federation establishes the applicable governance conditions. These conditions determine the participating authorities, purpose of the collaboration, applicable policy, and permitted forms of participation. OpenHealth represents this bounded context through a federation envelope. 
+Admission decisions also produce explicit governance evidence. The evidence associates the participant, governed context, requested activity, capability, purpose, decision outcome, and reason for the decision, allowing successful and denied requests to be reconstructed from the federation boundary rather than inferred solely from application logs or the historical configuration of several independent systems. Auditable decision evidence therefore links governance intent to operational participation without requiring centralisation of organisation-local policy mechanisms.
 
-Capabilities issued within that context describe what a participant may request. The admission boundary then determines whether the proposed participation is consistent with the governed context before the corresponding activity is allowed to proceed. 
+\subsubsection{Admission of AI agents}
 
-The resulting architecture separates three concerns that are frequently collapsed in operational systems: governance establishment → capability expression → operational execution. The first establishes the conditions under which the collaboration exists. The second expresses the bounded activities available to a participant. The third performs the actual computation. This is particularly useful when a collaboration must evolve. Changing the set of participants does not require redefining the entire operational environment. Instead, the federation determines whether the new participation relation is compatible with its existing governance conditions. 
+AI agents do not require a separate constitutive governance category. From the perspective of Federated Computing, an AI agent is a form of computational participant acting under an accountable organisational relationship. The model provider, planning strategy, memory architecture, tool framework, or execution runtime may affect how the agent behaves, but none of those implementation properties independently determines its federation rights. Admission remains governed through the same relations of authority, purpose, capability, holder binding, and federation context that apply to other participants.
 
-\subsection{Session-bound admission }
+Agent participation nevertheless introduces an additional operational distinction between runtime capability and federation capability. An agent runtime may expose file access, network communication, tools, APIs, or other execution mechanisms, but technical reachability does not establish entitlement to use a federation resource. Conversely, admission to a bounded federation operation does not grant unrestricted authority over the agent's local runtime or external environment. The federation therefore governs whether the computational participant may cross a particular boundary, while the agent runtime governs how admitted execution is carried out.
 
-OpenHealth implements this principle through session-bound admission. Admission occurs at the transition between federation setup and the activity being requested. It answers a narrower question than general access control: May this participant perform this federated activity, for this purpose, within this governed session? The decision is explicit and produces either an ALLOW or DENY outcome before the requested computation proceeds. 
-
-This boundary-oriented design follows the same basic principle validated in FLICS, where session-interface requests are evaluated against session-specific capabilities and explicit decision records are generated for both successful and unsuccessful requests. FLICS showed that such checks can be placed at the collaborative boundary without changing the underlying federated learning procedure.  
-
-OpenHealth retains this separation but embeds it within a broader federation-governance workflow. The governed session is established first; capabilities are subsequently issued within that context; and the gatekeeper evaluates requests before allowing the corresponding operational workflow to proceed. 
-
-The federated learning framework remains responsible for training and aggregation. It does not determine the governance legitimacy of the participant entering that activity. 
-
-\subsubsection{ Admission of participants }
-
- [TBD]
-
-\subsubsection{Admission of AI Agents }
-
-The same federation-governance problem applies when participation is performed by an AI agent rather than directly by a human user or conventional software client. 
-
-Contemporary agent frameworks such as OpenClaw provide environments in which an AI agent can invoke tools, load reusable skills, interact through multiple channels, and extend its runtime capabilities through plugins. Other agent frameworks provide related abstractions for tool use, multi-agent orchestration, handoffs, guardrails, and persistent execution state. These mechanisms determine how an agent acts once it is running. 
-
-OpenHealth addresses a different question: Under what authority may an AI agent participate in a governed health-data federation, for which purpose, and with access to which federated capabilities? An agent is therefore not treated as a new governance category parallel to organisations, datasets, or models. From the perspective of the federation, it is a computational participant acting under an accountable organisational relationship. Its internal architecture, model provider, planning strategy, memory system, or agent framework does not determine its federation rights. 
-
-Before an agent can invoke a federated operation, OpenHealth applies the same session-bound admission principle used for other participants. The agent must present a valid capability bound to the current governed federation context. The gatekeeper evaluates the requested operation, purpose, scope, and holder binding before the request is allowed to reach the corresponding operational service. 
-
-This creates an explicit separation between agent runtime capability and federation capability. For example, an OpenClaw deployment may locally possess tools capable of file access, network communication, API invocation, or other actions. Such local capabilities do not imply that the agent is entitled to invoke resources inside an OpenHealth federation. Conversely, admission to a bounded federation operation does not grant the agent unrestricted access to its local or external runtime environment. 
-
-The distinction is analogous to that already made between Federated Computing and federated learning. Flower determines how federated training is executed after participation has been admitted. An agent framework determines how an AI agent reasons, invokes tools, and coordinates actions after execution begins. In both cases, OpenHealth governs the cross-boundary participation relation. 
-
-This separation also avoids making assumptions about agent autonomy or predictability. Admission does not certify that an AI agent will behave correctly during execution. Runtime mechanisms such as tool policies, sandboxing, network isolation, human approval, guardrails, monitoring, or agent-specific security controls remain complementary. Contemporary agent frameworks already provide some of these controls. For example, the OpenAI Agents SDK supports tool and workflow guardrails, approvals, sandboxed execution, and handoffs. OpenClaw similarly provides policies governing tool exposure and runtime capabilities.  
-
-The role of OpenHealth is prior and narrower. It determines whether the computational participant may cross the federation boundary for the requested activity. In the proof-of-concept architecture, this allows an AI agent to be treated as another mode of participation without modifying the federation model. A human user, a conventional client process, or an AI-driven process can all request a federated capability. What differs is the capability granted and the operational controls applied after admission, not the constitutive governance mechanism itself. This property is important for future health-data services because agent technologies are likely to change rapidly. Binding federation governance to a particular agent framework would therefore make the infrastructure dependent on transient implementation choices. By placing admission outside the agent runtime, OpenHealth can admit an agent implemented using OpenClaw, the OpenAI Agents SDK, AutoGen, or another framework without changing the federation's governance model. 
-
-Recent agent incidents illustrate a less visible problem. Assurance properties are difficult to observe when systems behave as expected and become apparent only when an operational boundary is crossed. Such events are commonly interpreted primarily as failures of model reliability or agent behavior. This interpretation can obscure a prior systems question: whether the effective capabilities available to the computational participant were consistent with the authority, purpose, and scope under which it was allowed to participate. OpenHealth makes this distinction explicit. Admission defines the permitted participation relation, while a conformance criterion requires the operational environment exposed to the participant to remain consistent with that relation. A violation can therefore be identified not simply as unexpected agent behavior, but as a failure of the system to preserve an asserted governance boundary. This is particularly important for AI agents because their runtime behavior may vary while the federation's assurance obligations must remain stable. 
-
- 
-
-\subsection{ Differentiated participation }
-
-This architecture also avoids the assumption that collaboration growth requires adding increasingly many equivalent members. 
-
-Different organisations can establish different relations with the federation. 
-
-An existing federation member may have capabilities associated with training and model use. Another organisation may be permitted only to contribute to a specific federated training activity. A computational participant may eventually be admitted for another narrowly defined operation. These forms of participation need not confer equivalent rights. 
-
-This is particularly relevant to health-data collaboration, where willingness to contribute a resource does not necessarily imply a reciprocal right to consume every resource generated by the collaboration. 
-
-OpenHealth therefore separates participation from capability. Being permitted to contribute does not automatically imply permission to query a model. Being admitted to one activity does not establish unrestricted participation in other activities. Sponsorship similarly provides an accountable route through which a new participant may be considered by the federation without transferring the sponsor's own rights to that participant. 
-
-The practical consequence is that a federation can grow through asymmetric but explicitly governed relationships rather than requiring every new organisation to become an identical member. 
-
-This property is central to the proof of concept described in Section 4, in which Hospital C is permitted to contribute to federated training without acquiring the model-consumption capabilities available to the existing federation members. 
-
-\subsection{Governance as auditable evidence }
-
-A further requirement for collaboration at service scale is the ability to explain how participation decisions were made. 
-
-When authorization is distributed across application configuration, cloud IAM rules, orchestration services, and local systems, reconstructing a past decision can require recovering the configuration state of several components. FLICS addressed this problem by producing an explicit structured record for every admission decision, including the session, operation, outcome and reason for the decision. Its evaluation showed that denied requests as well as admitted requests could be reconstructed from boundary-visible evidence after execution.  
-
-OpenHealth adopts the same evidence-oriented principle. An admission decision is therefore not merely a transient control action. It becomes a governance artefact associated with the context in which participation was requested. The evidence records who requested the activity, the relevant capability and purpose, whether the request was admitted, and the reason for that decision. 
-
-This provides a direct link between governance intent and operational participation without requiring the federation to centralise the participating organisations' internal policy systems. 
-
-\subsection{Why this matters for OpenHealth }
-
-Federated Computing addresses three practical requirements that become increasingly important as OpenHealth moves from a fixed proof of concept towards a reusable health-data infrastructure. 
-\begin{itemize}
-    \item First, it provides a common governance boundary across heterogeneous organisations while allowing each organisation to retain its own identity, infrastructure, and data-management mechanisms. 
-
-\item  Second, it allows the federation to change its participation structure without granting uniform rights to every new participant. Capabilities can reflect the specific purpose for which an organisation participates. 
-
-\item  Third, it makes the decision to participate explicit and auditable before computation, rather than leaving that decision implicit in application configuration or reconstructing it retrospectively from runtime logs. 
-\end{itemize}
-
-The result is not another federated learning framework. Federated Computing provides the governance structure within which technologies such as Flower can be used. OpenHealth applies that structure to the practical problem of extending a health-data collaboration while preserving organisational sovereignty, bounded participation, and accountability. 
-
-Section 4 describes the implementation of these principles in the OpenHealth proof of concept. 
+Admission cannot certify that an AI agent will behave correctly after execution begins. Sandboxing, network isolation, tool policies, approval mechanisms, monitoring, and other runtime controls remain complementary mechanisms for constraining operational behaviour. Their presence does not expand the participation relation established by the federation, and an execution framework must not silently redefine federation semantics merely because a technically reachable action is available. The relevant assurance requirement is therefore conformance between the operational possibilities exposed to the agent and the capabilities established by the governed admission decision. Section 4 evaluates this requirement through a bounded AI-agent participation scenario while preserving the same federation-governance model used for human and conventional computational participants.
 
 % ===================== Section 4 ======================
 \section{OpenHealth PoC Implementation }
