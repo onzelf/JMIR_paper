@@ -1,1 +1,2 @@
 6047d13a9631ca8f1c50cdd6b491c1efb3471018bd4f40cfcff2f78ec922aa2a  fcac-conformance-criterion-v0_2.md
+c0fb43cf53743b6ac79bf46f93da7fbc4ad118a70469b5af8990dabc2f8753db  fcac-conformance-criterion-v0_2.pdf
