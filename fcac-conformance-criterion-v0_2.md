@@ -3,7 +3,7 @@
 **An invariant conformance criterion for Federated Computing as Code**
 
 Enzo Fenoglio — Department of Computer Science, University College London
-Draft v0.1 — August 2026
+v0.2 — August 2026
 
 ---
 
@@ -29,9 +29,9 @@ established. It is deliberately narrow. It says nothing about whether FCaC is th
 a given deployment; that question is answered by the deployment taxonomy in [1, §9], which is
 explicit that a cohesive federation with a shared control plane may need none of this.
 
-This is the first of three elements. The other two — fixed positioning answers, and licensed
-projections of the architecture for particular audiences — are separate documents. Projections
-are valid only where they can be checked against the invariant stated here.
+The criterion is stated once and applies to every presentation of the architecture. Descriptions of
+FCaC written for particular audiences — technical, clinical, executive — are valid only where they
+can be checked against the invariant stated here.
 
 ---
 
@@ -48,9 +48,9 @@ attributable to a sponsoring participant. Sponsorship transfers no accountabilit
 actor and creates no autonomous agency. It follows that admission of a sponsored actor must be
 correct *ex ante*: there is no downstream party to whom responsibility can devolve.
 
-**Admission.** The decision to permit an operation to cross a boundary. Admission is not
-authorisation: authorisation is a local access-control decision inside an executing environment,
-taken under that environment's own authority and state.
+**Admission.** The decision to permit an operation to cross a boundary, taken before the operation
+occurs. Admission is not authorisation: authorisation is a local access-control decision inside an
+executing environment, taken under that environment's own authority and state.
 
 **Envelope.** A governance object created under the federation's constitutive rules, fixing the
 participants, the effective policy, and the period within which capabilities may be minted and
@@ -68,11 +68,17 @@ the architecture.
 ## 2. The invariant
 
 > **An architecture is an FCaC instantiation if and only if every operation crossing a boundary is
-> admitted by a decision satisfying C1–C6 below, and no operation crosses a boundary otherwise.**
+> admitted by a prior decision satisfying C1–C7 below, and no operation crosses a boundary
+> otherwise.**
 
 The quantifier is universal and the second clause is not decoration. An architecture in which
 *some* paths are admitted this way and others bypass the gatekeeper does not partially conform; it
 does not conform. The value of the invariant lies entirely in there being no other way in.
+
+*Prior* is likewise load-bearing. A decision taken while the operation is in flight, or reconstructed
+after it, may be locally determined, deterministic and signed, and still not be an admission: there
+was no point at which the operation could have been refused on the strength of a record that already
+existed.
 
 **C1 — Local determination.** The decision is taken at the boundary where execution will occur,
 from material carried by the request together with trust anchors already held locally. It does not
@@ -106,11 +112,22 @@ artifact bindings, and the governance state in force. The record is verifiable b
 trusts none of the participating systems. Evidence reconstructible only from platform logs or
 mutable configuration does not satisfy C6.
 
+**C7 — Non-transfer under composition.** Where an admitted participant transforms a governed
+resource into a derivative — the *rebind* operation of [3] — authority to perform the transformation
+does not carry authority to release the result. Release to a recipient is a further boundary
+crossing, admitted on the *recipient's* own capability and not on the transformer's. Permission to
+consume a rebound derivative implies no permission to consume its source. A participant operates a
+transformation under its own authority; it cannot lend that authority to whoever invoked it.
+
+Three capabilities are therefore distinct and separately admitted: authority to perform the
+underlying operation, authority to rebind its result into a derivative representation, and authority
+to consume that derivative. A system that collapses any two of them fails C7.
+
 ---
 
 ## 3. What the invariant does not cover
 
-Conformance to C1–C6 establishes that authority at the boundary is correct. It establishes nothing
+Conformance to C1–C7 establishes that authority at the boundary is correct. It establishes nothing
 else, and three exclusions are worth stating plainly because they are routinely read as claims.
 
 **Containment is not admission.** Once an actor is admitted, what it does within its bounds is a
@@ -129,6 +146,11 @@ evidence of conformance and their absence is not evidence against it.
 withdrawal of a delegation link before its expiry, require revocation evidence distributed out of
 band. Bounded validity and key rotation are within the base design; the rest is stated future
 work [1, §6.4].
+
+Cumulative disclosure across separately admitted requests is likewise outside the criterion. Each
+admission is decided against the governance state in force, not against the history of prior
+decisions; per-recipient evidence under C6 is what a history-dependent control would be built on,
+not a substitute for one.
 
 ---
 
@@ -161,6 +183,21 @@ only by a party trusted by all participants. *(Violates C6.)*
 **D7.** Some cross-boundary path bypasses the gatekeeper — an administrative interface, a
 management API, a co-located service, a debugging route. *(Violates the universal quantifier.)*
 
+**D8.** A participant's authority to transform or rebind a resource is treated as authority to
+release the result to whoever requested it. *(Violates C7.)* The transformation is admitted; the
+release is a separate crossing and is not.
+
+**D9.** The decision is taken at execution time, or reconstructed afterwards, with no record in
+existence before the operation. *(Violates the invariant.)* Runtime evaluation may be strong and
+still not be admission: dynamic verification of a request in flight answers a different question
+from whether the request should have been permitted to occur.
+
+**D10.** Federation policy is expressed as versioned, machine-readable configuration, but no signed
+prior admission record is produced per boundary-crossing operation. *(Violates the invariant.)*
+Policy-as-code fixes the governance state; it does not decide admission. The "as code" paradigm is
+how FCaC represents constitutive rules — it is not what makes an architecture an instantiation of
+them.
+
 ---
 
 ## 5. Checking conformance
@@ -176,6 +213,8 @@ running system.
 | C4 | Present a valid capability with a proof generated under a different key. DENY on holder binding. |
 | C5 | Change the effective policy. Capabilities issued under the prior policy are no longer admitted. |
 | C6 | Take a decision record to a party holding only the federation's public trust anchors. They can verify the signature, read the outcome and reason, and confirm the artifact was not modified after issuance. |
+| C7 | Have an admitted participant rebind a resource into a derivative, then request release of that derivative to a recipient holding no capability over it. DENY, with the reason naming the recipient's absent capability rather than the transformer's. Separately: confirm that a recipient admitted to consume the derivative is still denied the source. |
+| Prior | For any admitted operation, the decision record exists and is verifiable independently of the operation's own artifacts, and predates them. |
 | All | Enumerate every ingress to the protected domain. Each one either passes the gatekeeper or is not a boundary. |
 
 A conforming implementation therefore exhibits a characteristic defect profile: findings take the
@@ -186,7 +225,7 @@ different architecture.
 
 ---
 
-## 6. On "loosely inspired by"
+## 6. Governance Questions
 
 The questions FCaC addresses are not proprietary. Who may request an operation, which data and code
 are authorised, what may leave a node, and how the resulting artefact can be reproduced and
@@ -212,9 +251,9 @@ approach. Where a stronger relationship is intended, this note states the test.
 FCaC is implemented. The proof of concept accompanying [1] demonstrates envelope issuance,
 boundary verification and envelope-triggered training; the session-admission instantiation in [2]
 adds decision records as run artifacts, negative tests for capability and possession mismatch, and
-sub-millisecond per-request admission cost. Current work extends the model to envelope-bound
-capabilities, signed governance evidence, policy-hash continuity, and sponsored non-human
-participants.
+sub-millisecond per-request admission cost. The OpenHealth demonstrator extends the model to
+envelope-bound capabilities, signed governance evidence, policy-hash continuity, sponsored
+non-human participants, and the composition case stated in C7.
 
 Conformance claims made against this criterion should cite the version of this note in force at the
 time of the claim.

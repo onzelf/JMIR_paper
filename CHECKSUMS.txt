@@ -1,0 +1,1 @@
+6047d13a9631ca8f1c50cdd6b491c1efb3471018bd4f40cfcff2f78ec922aa2a  fcac-conformance-criterion-v0_2.md
